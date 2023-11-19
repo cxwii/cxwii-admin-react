@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 function App() {
   
@@ -18,6 +18,17 @@ function App() {
       name: 'cxwii'
     })
   }
+
+  // 受控表单的绑定
+  const [inputValue, setInputValue] = useState<any>('')
+
+
+  // 获取dom
+  const divDOM = useRef(null)
+
+  const test2 = () => {
+    console.log('divDOM :>> ', divDOM)
+  }
   
   return (
     <>
@@ -26,6 +37,12 @@ function App() {
       {form.name}
       <button onClick={test}>test</button>
       <button onClick={() => setCount(count + 1)}>count++</button>
+      <br/>
+      {inputValue}
+      <input value={inputValue} onChange={(e) => {setInputValue(e.target.value)}}></input>
+      <br/>
+      <div ref={divDOM}>123</div>
+      <button onClick={test2}>测试</button>
     </>
   )
 }
