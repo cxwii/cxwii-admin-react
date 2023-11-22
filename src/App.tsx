@@ -1,4 +1,19 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { inscrement, decrement, setUsername, getList } from './store/module/user'
+import { useSelector, useDispatch } from "react-redux"
+
+// useSelector类型的问题解决方案
+import store from './store'
+type GetstateFunType = typeof store.getState
+type IRootState = ReturnType<GetstateFunType>
+// 你还可以在一个hook里面这样定义一个自己的useSelector来用,这么写笔记而已就不搞了
+// TypedUseSelectorHook在react-redux里面
+// export const useAppSelector: TypedUseSelectorHook<IRootState> = useSelector
+
+// 异步操作action类型的问题解决方案
+// 也是应该和上面那里一样定义在同一个hook里,然后使用,同样也麻烦写了
+type AppDispatch = typeof store.dispatch
+const useAppDispatch: () => AppDispatch = useDispatch
 
 // 跨层传递
 //先用createContext创建上下文对象
@@ -94,6 +109,12 @@ function App() {
 
   // hook和vue基本一模一样就不写了
 
+  // 使用store
+  const { username, mycount } = useSelector((state: IRootState) => state.user)
+  // 修改store
+  const dispatch = useAppDispatch()
+
+
   return (
     <>
       <MsgContext.Provider value={ContextValue}>
@@ -112,6 +133,13 @@ function App() {
         <Son sondata={sondata}>
           <div>children-插槽</div>
         </Son>
+        <div>---------------------------------------</div>
+        <div>store数据:{username}</div>
+        <button onClick={() => dispatch(setUsername('cxwii'))}>修改</button>
+        <button onClick={() => dispatch(getList())}>异步修改</button>
+        <div>store数据:{mycount}</div>
+        <button onClick={() => dispatch(inscrement())}>++</button>
+        <button onClick={() => dispatch(decrement())}>--</button>
       </MsgContext.Provider>
     </>
   )
