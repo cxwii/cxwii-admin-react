@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { inscrement, decrement, setUsername, getList } from './store/module/user'
 import { useSelector, useDispatch } from "react-redux"
+import { Link, useNavigate } from "react-router-dom"
 
 // useSelector类型的问题解决方案
 import store from './store'
@@ -115,6 +116,10 @@ function App() {
   const dispatch = useAppDispatch()
 
 
+  // 路由
+  const navigate  = useNavigate()
+
+
   return (
     <>
       <MsgContext.Provider value={ContextValue}>
@@ -140,6 +145,12 @@ function App() {
         <div>store数据:{mycount}</div>
         <button onClick={() => dispatch(inscrement())}>++</button>
         <button onClick={() => dispatch(decrement())}>--</button>
+        <div>---------------------------------------</div>
+        <div>路由</div>
+        <Link to='/test2'>声明式跳转</Link>
+        <button onClick={() => {
+          navigate('/test2')
+        }}>编程式跳转</button>
       </MsgContext.Provider>
     </>
   )
