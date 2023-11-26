@@ -21,6 +21,7 @@ const userStore = createSlice({
 
 const { inscrement, decrement, setUsername } = userStore.actions
 // 异步的请求
+// 这里还可以直接加入持久化的东西
 const getList = () => {
   return async (dispatch: Dispatch) => {
     const res = await new Promise((resolve) => {

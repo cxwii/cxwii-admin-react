@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { inscrement, decrement, setUsername, getList } from './store/module/user'
 import { useSelector, useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
+import { Button } from 'antd'
 
 // useSelector类型的问题解决方案
 import store from './store'
@@ -151,6 +152,9 @@ function App() {
         <button onClick={() => {
           navigate('/test2')
         }}>编程式跳转</button>
+        <div>---------------------------------------</div>
+        <div>antd</div>
+        <Button type="primary">Button</Button>
       </MsgContext.Provider>
     </>
   )
