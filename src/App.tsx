@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, useReducer, useMemo, memo, useCallback } from 'react'
 import { inscrement, decrement, setUsername, getList } from './store/module/user'
 import { useSelector, useDispatch } from "react-redux"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useMatch, useNavigate } from "react-router-dom"
 import { Button } from 'antd'
 
 // useSelector类型的问题解决方案
@@ -121,6 +121,65 @@ function App() {
   const navigate  = useNavigate()
 
 
+  // useReducer和useState差不多都是用于数据处理的,不同的是useState是处理简单的数据
+  // useReducer是用一个函数来根据不同状态返回不同的数据
+  const reducer = (state: any, action: any) => {
+    switch (action.type) {
+      case "INC":
+        return state + 1
+      case "DEC":
+        return state - 1
+      case "SET":
+        return action.payload
+      default:
+        return state
+    }
+  }
+
+  const [redState, redDispatch] = useReducer(reducer, 0)
+
+
+  // useMemo
+  // 缓存值
+  // 在组件每次重新渲染的时候缓存计算的结果,有点类似于vue的计算属性
+  // 好处是用它计算的结果只会在依赖项变化时重新计算,非依赖项不会引发
+  // useMemo(() => {
+  //   // 可以直接在里面调用一个函数,函数传值就是依赖项这样
+  //   // foo('下面的哪里的依赖项')
+  //   // 这样只有依赖项发生变化foo()才会执行
+  //   return '返回结果'
+  // },['依赖项'])
+
+
+  // react默认中父组件发生状态变化的时候,子组件也会重新渲染
+  // 所以可以通过memo来依赖缓存,往里面放一个子组件或者jsx
+  // 他会返回一个新的组件提供使用,这个组件只会在props发生变化才会重新渲染
+  // <sonMemo></sonMemo>
+  // const sonMemo =  memo(() => {
+  //     return <div>son</div>
+  //   }
+  // )
+  // 它的机制其实就是用object.is()来做对比,对比通过就相当于props没有变化
+  // 但object在对比引用数据类型时是false比如Object.is([], [])
+  // 这时候反而会会重新渲染了,这是一个机制不是bug
+  // 所以这时候就可以用到上面的useMemo来缓存依赖了
+  // 只要如下这样就可以了
+  // const list = useMemo(() => {
+  //   return [1, 2, 3]
+  // }, [])
+  // 这个list在作为props的时候是不会生成新的数组去比较的
+  // 所以Object.is([], [])就变成了Object.is(list, list)
+  // 这样就是true了,就不会有问题了
+
+  
+  // useCallback
+  // 和useMemo差不多,其实就上上面说的情况
+  // 当props为函数的时候就可以使用useCallback来保持稳定
+  // const change = useCallback(() => {}, [])
+  // useMemo返回的是值,而useCallback是回调函数,但其实用useMemo直接返回个函数也可以
+  // 但没这么优雅,就和vue的ref和refactive一样的关系
+
+
   return (
     <>
       <MsgContext.Provider value={ContextValue}>
@@ -155,6 +214,12 @@ function App() {
         <div>---------------------------------------</div>
         <div>antd</div>
         <Button type="primary">Button</Button>
+        <div>---------------------------------------</div>
+        <div>useReducer</div>
+        <div>useReducer值:{redState}</div>
+        <button onClick={() => redDispatch({type: 'INC'})}>++</button>
+        <button onClick={() => redDispatch({type: 'DEC'})}>--</button>
+        <button onClick={() => redDispatch({type: 'SET', payload: '114154'})}>set</button>
       </MsgContext.Provider>
     </>
   )

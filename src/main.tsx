@@ -1,11 +1,16 @@
-import React, { lazy } from 'react'
+import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
 // 在根目录中注册store
 import store from './store'
 import { Provider } from 'react-redux'
 // 使用Router
 import { createBrowserRouter, RouterProvider, Outlet, Link } from "react-router-dom"
+
+// import App from './App.tsx'
+// 懒加载的写法,lazy,还有按需加载等等都差不多
+// 被加载的组件还要加上<Suspense>内置组件
+// vue3中的Suspense还属于实验室功能
+const App = lazy(() => import('./App.tsx'))
 
 // 编写Router
 // 正常分模块来写才对,我这里写笔记而已就不分了
@@ -16,10 +21,9 @@ const router = createBrowserRouter([
     index: true,
     element: <App />
   },
-  // 懒加载的写法,主要靠lazy,还有按需加载等等都差不多(注意要Component,或者头部引入)
   {
     path: '/test1',
-    Component: lazy(() => import('./App.tsx'))
+    element: <Suspense fallback={'加载中'}><App /></Suspense>
   },
   {
     path: '/test2',
@@ -51,6 +55,20 @@ const router = createBrowserRouter([
     element: <div>404</div>
   }
 ])
+
+// react的路由守卫的方式一般采用高阶组件的写法
+// 就是有一个中间组件,大概如下
+// const AuthRoute = ({ children }) {
+//   const token = getToken()
+//   if (token) {
+//     return <>{children}</>
+//   } else {
+//     // replace替换模式
+//     return <Navigate to={'/login'} replace></Navigate>
+//   }
+// }
+// 然后在路由里引入使用,如这样
+// element: <AuthRoute><foo></foo></AuthRoute>
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
