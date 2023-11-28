@@ -1,5 +1,7 @@
 import { createSlice, Dispatch } from '@reduxjs/toolkit'
 
+// redux还有个类似pinia的平替Zusstand,非常简单轻便
+
 const userStore = createSlice({
   name: 'user',
   initialState: {

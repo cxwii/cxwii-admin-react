@@ -1,8 +1,47 @@
-import { createContext, useContext, useEffect, useRef, useState, useReducer, useMemo, memo, useCallback } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, useReducer, useMemo, memo, useCallback, forwardRef, useImperativeHandle, ReactNode } from 'react'
 import { inscrement, decrement, setUsername, getList } from './store/module/user'
 import { useSelector, useDispatch } from "react-redux"
 import { Link, useMatch, useNavigate } from "react-router-dom"
 import { Button } from 'antd'
+import { create } from 'zustand'
+
+
+// redux的平替
+interface BearState {
+  bears: number
+  increasePopulation: () => void
+  removeAllBears: () => void
+}
+const useStore = create<BearState>((set) => ({
+  bears: 0,
+  increasePopulation: () => set((state: any) => ({ bears: state.bears + 1 })),
+  removeAllBears: () => set({ bears: 0 }),
+  // 异步操作直接用async await就可以,如这样
+  // foo: async () => {
+  //   const res: any = await getList()
+  //   set({ bears: res })
+  // }
+}))
+
+// // 切片zutand(模块组合)
+// // 先定义不同的模块
+// const createFishSlice = (set) => ({
+//   fishes: 0,
+//   addFish: () => set((state) => ({ fishes: state.fishes + 1 })),
+// })
+// const createBearSlice = (set) => ({
+//   bears: 0,
+//   addBear: () => set((state) => ({ bears: state.bears + 1 })),
+//   eatFish: () => set((state) => ({ fishes: state.fishes - 1 })),
+// })
+// // 然后去组合
+// const useBoundStore = create((...a) => ({
+//   ...createBearSlice(...a),
+//   ...createFishSlice(...a),
+// }))
+// // 这里是js写法,ts类型有问题官网上有写
+// // 使用和普通的一样,在useBoundStore里可以结构出来所有的
+
 
 // useSelector类型的问题解决方案
 import store from './store'
@@ -23,6 +62,45 @@ const useAppDispatch: () => AppDispatch = useDispatch
 // 最后在其他底层组件可以通过useContext来使用数据
 const MsgContext = createContext('默认的值') // 默认值在Provider没有传数据时起效
 
+// forwardRef转发ref
+// 子组件不能直接通过ref取dom,要使用forwardRef去传递ref然后获取
+// const FooSon = forwardRef((props, ref) => {
+//   return <input type='text' ref={ref} />
+// })
+// 这里的ref会ts报错,所以应该去定义一个ref类型,大概如下,或者直接any
+interface InputProps {
+}
+// const FooSon = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+//   return <input type='text' ref={ref} />
+// })
+// useImperativeHandle 可以让你在使用 ref 时自定义暴露给父组件的实例值
+// 有点像vue3的defineExpose,一般和forwardRef组合使用
+const FooSon = forwardRef<InputProps>((props, ref) => {
+  const sonRefDom = useRef(null)
+
+  const foo = () => {
+    console.log('sonFUn :>> ')
+  }
+
+
+  useImperativeHandle(ref, () => {
+    return {
+      // 需要暴露的内容
+      foo,
+      // 这时候父组件拿dom就要拿这里面的这个了
+      sonRefDom
+    }
+  })
+  return <input type='text' ref={sonRefDom} />
+})
+
+
+// 插槽的ts类型有个内置的类型ReactNode,如下所示
+// type pro = {
+//   className: string,
+//   children: ReactNode
+// }
+// 它包含很多类型,具体查文档
 
 const Son = (props: any) => {
   // props什么值都能传,函数,dom(jsx)都能
@@ -40,12 +118,14 @@ const Son = (props: any) => {
 
 
   console.log('插槽 :>> ', props.children)
+
   return (
     <>
       <div>子组件接受的值--{props.sondata}</div>
     </>
   )
 }
+
 
 function App() {
   
@@ -72,10 +152,13 @@ function App() {
 
   // 获取dom
   const divDOM = useRef(null)
-
+  // 获取子组件dom
+  const sonRef = useRef(null)
   const test2 = () => {
     console.log('divDOM :>> ', divDOM)
+    console.log('子组件的ref :>> ', sonRef)
   }
+
 
   // 传递给子组件的值
   const sondata = '父子组件传值'
@@ -168,7 +251,7 @@ function App() {
   //   return [1, 2, 3]
   // }, [])
   // 这个list在作为props的时候是不会生成新的数组去比较的
-  // 所以Object.is([], [])就变成了Object.is(list, list)
+  // 所以Object.is([], [])就变成了Object.is(list,forwardRef list)
   // 这样就是true了,就不会有问题了
 
   
@@ -179,6 +262,23 @@ function App() {
   // useMemo返回的是值,而useCallback是回调函数,但其实用useMemo直接返回个函数也可以
   // 但没这么优雅,就和vue的ref和refactive一样的关系
 
+
+  // react老版本中是通过class来定义jsx的(集成react里面的一个内置的Component类)
+  // 里面还有个render函数来渲染.了解一下就好
+  // 现在react已经不推荐这样搞了
+  // 这个方式的组件被称为类组件
+  // class Greeting extends Component {
+  //   render() {
+  //     return <h1>Hello, {this.props.name}!</h1>;
+  //   }
+  // }
+  // 而之前那些都叫做函数组件
+  // 函数组件时没有生命周期方法的,只有类函数才有,是没有生命周期方法不是没有生命周期
+
+
+  // zustand使用
+
+  const { bears, increasePopulation, removeAllBears } = useStore()
 
   return (
     <>
@@ -191,9 +291,10 @@ function App() {
         <br/>
         {inputValue}
         <input value={inputValue} onChange={(e) => {setInputValue(e.target.value)}}></input>
-        <br/>
+        <div>---------------------------------------</div>
         <div ref={divDOM}>123</div>
-        <button onClick={test2}>测试</button>
+        <FooSon ref={sonRef}></FooSon>
+        <button onClick={test2}>ref测试</button>
         <div>---------------------------------------</div>
         <Son sondata={sondata}>
           <div>children-插槽</div>
@@ -220,6 +321,9 @@ function App() {
         <button onClick={() => redDispatch({type: 'INC'})}>++</button>
         <button onClick={() => redDispatch({type: 'DEC'})}>--</button>
         <button onClick={() => redDispatch({type: 'SET', payload: '114154'})}>set</button>
+        <div>---------------------------------------</div>
+        <div>zustand</div>
+        <button onClick={increasePopulation}>{bears}</button>
       </MsgContext.Provider>
     </>
   )
